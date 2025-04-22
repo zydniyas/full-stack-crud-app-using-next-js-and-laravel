@@ -114,21 +114,28 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const getProducts = async () => {
-    const response = await axios.get(`${API_URL}/products`, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
-    console.log("response:", response);
-    if (response.status) {
-      setProducts(response.data.products);
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`${API_URL}/products`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      console.log("response:", response);
+      if (response.status) {
+        setProducts(response.data.products);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // console.log("isLoading:", isLoading);
     getProducts();
-  }, [products]);
+  }, []);
+
   return (
     <AppContext.Provider
       value={{

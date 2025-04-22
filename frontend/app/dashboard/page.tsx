@@ -43,38 +43,52 @@ const Dashboard: React.FC = () => {
   });
 
   const addProduct = async () => {
-    const response = await axios.post(`${API_URL}/products`, formData, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    console.log("response:", response);
-    if (response.data.status) {
-      setFormData({
-        title: "",
-        discription: "",
-        price: 0,
-        file: null,
-        banner_image: "",
+    try {
+      setIsLoading(true);
+      const response = await axios.post(`${API_URL}/products`, formData, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "multipart/form-data",
+        },
       });
-      toast.success("Product added successfully");
-    } else {
-      toast.error("Product adding failed");
+      console.log("response:", response);
+      if (response.data.status) {
+        setFormData({
+          title: "",
+          discription: "",
+          price: 0,
+          file: null,
+          banner_image: "",
+        });
+        await getProducts();
+        toast.success("Product added successfully");
+      } else {
+        toast.error("Product adding failed");
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const deleteProduct = async (id: number) => {
-    const response = await axios.delete(`${API_URL}/products/${id}`, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
-    if (response.data.status) {
+    try {
       setIsLoading(true);
-      await getProducts();
+      const response = await axios.delete(`${API_URL}/products/${id}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      if (response.data.status) {
+        await getProducts();
+
+        toast.success("Product deleted successfully");
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
       setIsLoading(false);
-      toast.success("Product deleted successfully");
     }
   };
 
@@ -171,7 +185,7 @@ const Dashboard: React.FC = () => {
               <tbody>
                 {products.map((item, i) => (
                   <tr key={i}>
-                    <td>{i}</td>
+                    <td>{i + 1}</td>
                     <td>{item.title}</td>
                     <td>
                       <Image
