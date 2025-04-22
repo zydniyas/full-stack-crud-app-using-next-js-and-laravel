@@ -72,15 +72,16 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $data[] = $request->validate(['title' => 'required']);
-
+        $data = $request->validate([
+            'title' => 'required',
+            'description' => 'nullable|string',
+            'price' => 'nullable|numeric'
+        ]);
 
         if ($request->hasFile('banner_image')) {
-
             if ($product->banner_image) {
                 Storage::disk('public')->delete($product->banner_image);
             }
-
             $data['banner_image'] = $request->file('banner_image')->store('products', 'public');
         }
 
@@ -91,6 +92,7 @@ class ProductController extends Controller
             'message' => 'Product updated successfully'
         ]);
     }
+
 
     /**
      * Remove the specified resource from storage.

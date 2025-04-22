@@ -2,7 +2,6 @@
 
 import { MyAppHook } from "@/context/AppProvider";
 import axios from "axios";
-
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -60,7 +59,7 @@ const Dashboard: React.FC = () => {
       const response = await axios.post(`${API_URL}/products`, formData, {
         headers: {
           Authorization: `Bearer ${authToken}`,
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       });
       console.log("response:", response);
@@ -125,7 +124,7 @@ const Dashboard: React.FC = () => {
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
           },
         }
       );
