@@ -8,6 +8,16 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 interface productData {
+  id: number;
+  title: string;
+  discription: string;
+  price: number;
+  file: File | null;
+  banner_image: string;
+}
+
+interface productToEdit {
+  id: number;
   title: string;
   discription: string;
   price: number;
@@ -18,6 +28,7 @@ const Dashboard: React.FC = () => {
   const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
   const fileRef = useRef<HTMLInputElement>(null);
   const { authToken, setIsLoading, products, getProducts } = MyAppHook();
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -34,7 +45,8 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const [formData, setFormData] = useState<productData>({
+  const [formData, setFormData] = useState<productData | productToEdit>({
+    id: 0,
     title: "",
     discription: "",
     price: 0,
@@ -42,7 +54,7 @@ const Dashboard: React.FC = () => {
     banner_image: "",
   });
 
-  const addProduct = async () => {
+  const handleAddProduct = async () => {
     try {
       setIsLoading(true);
       const response = await axios.post(`${API_URL}/products`, formData, {
@@ -54,6 +66,7 @@ const Dashboard: React.FC = () => {
       console.log("response:", response);
       if (response.data.status) {
         setFormData({
+          id: 0,
           title: "",
           discription: "",
           price: 0,
@@ -72,7 +85,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const deleteProduct = async (id: number) => {
+  const handleDeleteProduct = async (id: number) => {
     try {
       setIsLoading(true);
       const response = await axios.delete(`${API_URL}/products/${id}`, {
@@ -92,12 +105,70 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleEditProduct = (id: number) => {
+    console.log(products);
+    const productToEdit = products.find((product) => product.id === id);
+    if (productToEdit) {
+      setIsEdit(true);
+      setFormData(productToEdit);
+    } else {
+      console.warn(`Product with ID ${id} not found.`);
+    }
+  };
+
+  const handleUpdateProduct = async () => {
+    setIsLoading(true);
     try {
-      await addProduct();
+      const response = await axios.put(
+        `${API_URL}/products/${formData.id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("response:", response);
+
+      if (response.data.status) {
+        setFormData({
+          id: 0,
+          title: "",
+          discription: "",
+          price: 0,
+          file: null,
+          banner_image: "",
+        });
+        setIsEdit(false);
+        await getProducts();
+        toast.success("Product updated successfully");
+      } else {
+        toast.error("Product updation failed");
+      }
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (isEdit) {
+      try {
+        await handleUpdateProduct();
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      try {
+        await handleAddProduct();
+      } catch (error) {
+        console.log(error);
+      }
     }
   };
 
@@ -116,7 +187,7 @@ const Dashboard: React.FC = () => {
         <div className="row">
           <div className="col-md-6">
             <div className="card p-4">
-              <h4>Add Product</h4>
+              <h4>{isEdit ? "Edit Product" : "Add Product"} </h4>
               <form onSubmit={handleSubmit}>
                 <input
                   onChange={handleOnChange}
@@ -165,7 +236,7 @@ const Dashboard: React.FC = () => {
                   id="bannerInput"
                 />
                 <button className="btn btn-primary" type="submit">
-                  Add Product
+                  {isEdit ? "Update Product" : "Add Product"}
                 </button>
               </form>
             </div>
@@ -197,11 +268,14 @@ const Dashboard: React.FC = () => {
                     </td>
                     <td>{item.price}</td>
                     <td>
-                      <button className="btn btn-warning btn-sm me-2">
+                      <button
+                        onClick={() => handleEditProduct(item.id)}
+                        className="btn btn-warning btn-sm me-2"
+                      >
                         Edit
                       </button>
                       <button
-                        onClick={() => deleteProduct(item.id)}
+                        onClick={() => handleDeleteProduct(item.id)}
                         className="btn btn-danger btn-sm"
                       >
                         Delete
