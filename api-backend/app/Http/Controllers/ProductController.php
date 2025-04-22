@@ -75,14 +75,12 @@ class ProductController extends Controller
         $data = $request->validate([
             'title' => 'required',
             'description' => 'nullable|string',
-            'price' => 'nullable|numeric'
+            'price' => 'nullable|numeric',
+            'banner_image' => 'nullable|string',
         ]);
 
         if ($request->hasFile('banner_image')) {
-            if ($product->banner_image) {
-                Storage::disk('public')->delete($product->banner_image);
-            }
-            $data['banner_image'] = $request->file('banner_image')->store('products', 'public');
+            $validatedData['banner_image'] = $request->file('banner_image')->store('products', 'public');
         }
 
         $product->update($data);
