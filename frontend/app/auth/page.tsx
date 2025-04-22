@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { myAppHook } from "@/context/AppProvider";
+import React, { useEffect, useState } from "react";
+import { MyAppHook } from "@/context/AppProvider";
+import { useRouter } from "next/navigation";
 
 interface formData {
   name?: string;
@@ -19,7 +20,7 @@ const Auth: React.FC = () => {
     password_confirmation: "",
   });
 
-  const { login, register } = myAppHook();
+  const { login, register, authToken, isLoading, setIsLoading } = MyAppHook();
 
   const handleOnChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -50,6 +51,15 @@ const Auth: React.FC = () => {
       }
     }
   };
+
+  const router = useRouter();
+  useEffect(() => {
+    if (authToken) {
+      setIsLoading(true);
+      router.push("/dashboard");
+      setIsLoading(false);
+    }
+  }, [authToken, isLoading]);
   return (
     <>
       <div className="container d-flex justify-content-center align-items-center vh-100">

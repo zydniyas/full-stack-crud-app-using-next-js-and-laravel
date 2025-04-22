@@ -13,7 +13,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $user_id = auth()->user()->id;
+        $user_id = auth()->id();
         $products = Product::WHERE('user_id', $user_id)->get();
 
         return response()->json([
@@ -27,20 +27,32 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $data[] = $request->validate(['title' => 'required']);
-        $data['user_id'] = auth()->user()->id;
+        // Validate request
+        $validatedData = $request->validate([
+            'title' => 'required',
+            'discription' => 'nullable',
+            'price' => 'nullable|numeric',
+            'banner_image' => 'nullable|string',
+        ]);
 
+        // Add user_id to data
+        $validatedData['user_id'] = auth()->id();
+
+        // Handle file upload
         if ($request->hasFile('banner_image')) {
-            $data['banner_image'] = $request->file('banner_image')->store('products', 'public');
+            $validatedData['banner_image'] = $request->file('banner_image')->store('products', 'public');
         }
 
-        Product::created($data);
+        // Create the product
+        Product::create($validatedData);
 
+        // Return success response
         return response()->json([
             'status' => true,
-            'message' => 'Product created successfully'
+            'message' => 'Product created successfully',
         ]);
     }
+
 
     /**
      * Display the specified resource.
