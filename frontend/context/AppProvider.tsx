@@ -67,6 +67,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       if (response.data.status) {
         Cookies.set("authToken", response.data.token, { expires: 7 });
         setAuthToken(response.data.token);
+        getProducts();
         router.push("/dashboard");
         toast.success("Login successful");
       } else {

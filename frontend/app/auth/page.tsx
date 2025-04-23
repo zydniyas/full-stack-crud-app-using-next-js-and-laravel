@@ -3,48 +3,31 @@
 import React, { useEffect, useState } from "react";
 import { MyAppHook } from "@/context/AppProvider";
 import { useRouter } from "next/navigation";
-
-interface formData {
-  name?: string;
-  email: string;
-  password: string;
-  password_confirmation?: string;
-}
+import { useFormik } from "formik";
+import { loginSchema, registerSchema } from "../../schemas/index";
 
 const Auth: React.FC = () => {
+  const onSubmit = () => {
+    handleFormSubmit();
+  };
   const [isLogin, setIsLogin] = useState<boolean>(true);
-  const [formData, setFormData] = useState<formData>({
-    name: "",
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
 
   const { login, register, authToken, isLoading, setIsLoading } = MyAppHook();
 
-  const handleOnChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [event.target.name]: event.target.value,
-    });
-  };
-
-  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleFormSubmit = async () => {
     if (isLogin) {
       try {
-        await login(formData.email, formData.password);
+        await login(values.email, values.password);
       } catch (error) {
         console.log(error);
       }
     } else {
       try {
         await register(
-          formData.name!,
-          formData.email,
-          formData.password,
-          formData.password_confirmation!
+          values.name!,
+          values.email,
+          values.password,
+          values.password_confirmation!
         );
       } catch (error) {
         console.log(error);
@@ -53,6 +36,19 @@ const Auth: React.FC = () => {
   };
 
   const router = useRouter();
+
+  const { values, errors, touched, handleChange, handleBlur, handleSubmit } =
+    useFormik({
+      initialValues: {
+        name: "",
+        email: "",
+        password: "",
+        password_confirmation: "",
+      },
+      validationSchema: isLogin ? loginSchema : registerSchema,
+      onSubmit,
+    });
+
   useEffect(() => {
     if (authToken) {
       setIsLoading(true);
@@ -65,48 +61,71 @@ const Auth: React.FC = () => {
       <div className="container d-flex justify-content-center align-items-center vh-100">
         <div className="card p-4" style={{ width: "400px" }}>
           <h3 className="text-center">{isLogin ? "Login" : "Register"} </h3>
-          <form onSubmit={handleFormSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             {!isLogin && (
-              <input
-                className="form-control mb-2"
-                name="name"
-                type="text"
-                value={formData.name}
-                onChange={handleOnChangeInput}
-                placeholder="Name"
-                required
-              />
+              <div>
+                <input
+                  className="form-control mb-2"
+                  name="name"
+                  type="text"
+                  value={values.name}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="Name"
+                  required
+                />
+                {errors.name && touched.name && (
+                  <p className="mt-2 fs-6 text-danger">{errors.name}</p>
+                )}
+              </div>
             )}
 
             <input
               className="form-control mb-2"
               name="email"
               type="email"
-              value={formData.email}
-              onChange={handleOnChangeInput}
+              value={values.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Email"
               required
             />
+            {errors.email && touched.email && (
+              <p className="mt-2 fs-6 text-danger">{errors.email}</p>
+            )}
             <input
               className="form-control mb-2"
               name="password"
               type="password"
-              value={formData.password}
-              onChange={handleOnChangeInput}
+              value={values.password}
+              onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Password"
               required
             />
+            {errors.password && touched.password && (
+              <p className="mt-2 fs-6 text-danger">{errors.password}</p>
+            )}
 
             {!isLogin && (
-              <input
-                className="form-control mb-2"
-                name="password_confirmation"
-                type="password"
-                value={formData.password_confirmation}
-                onChange={handleOnChangeInput}
-                placeholder="Confirm Password"
-                required
-              />
+              <div>
+                <input
+                  className="form-control mb-2"
+                  name="password_confirmation"
+                  type="password"
+                  value={values.password_confirmation}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="Confirm Password"
+                  required
+                />
+                {errors.password_confirmation &&
+                  touched.password_confirmation && (
+                    <p className="mt-2 fs-6 text-danger">
+                      {errors.password_confirmation}
+                    </p>
+                  )}
+              </div>
             )}
 
             <button className="btn btn-primary w-100" type="submit">
